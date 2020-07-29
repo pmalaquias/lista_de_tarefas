@@ -46,6 +46,25 @@ class _HomeState extends State<Home> {
     });
   }
 
+  Future<Null> _refresh() async {
+    await Future.delayed(Duration(seconds: 1));
+
+    setState(() {
+      _toDoList.sort((a, b) {
+        if (a["ok"] && !b["ok"])
+          return 1;
+        else if (!a["ok"] && b["ok"])
+          return -1;
+        else
+          return 0;
+      });
+
+      _saveData();
+    });
+
+    return null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -78,11 +97,13 @@ class _HomeState extends State<Home> {
             ),
           ),
           Expanded(
+              child: RefreshIndicator(
+            onRefresh: _refresh,
             child: ListView.builder(
                 padding: EdgeInsets.only(top: 10.0),
                 itemCount: _toDoList.length,
                 itemBuilder: buildItem),
-          ),
+          )),
         ],
       ),
     );
@@ -125,19 +146,19 @@ class _HomeState extends State<Home> {
 
           final snack = SnackBar(
             content: Text("Tarefa \"${_lastRamove["title"]}\" removida!"),
-            action: SnackBarAction(label: "Desfazer", 
-              onPressed: (){
-                setState(() {
-                  _toDoList.insert(_lastRemovePos, _lastRamove);
-                _saveData();
-                });
-                
-              }),
-              duration: Duration(seconds: 2),
+            action: SnackBarAction(
+                label: "Desfazer",
+                onPressed: () {
+                  setState(() {
+                    _toDoList.insert(_lastRemovePos, _lastRamove);
+                    _saveData();
+                  });
+                }),
+            duration: Duration(seconds: 2),
           );
 
+          Scaffold.of(context).removeCurrentSnackBar();
           Scaffold.of(context).showSnackBar(snack);
-
         });
       },
     );
