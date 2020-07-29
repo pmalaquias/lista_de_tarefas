@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:core';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -19,6 +20,9 @@ class _HomeState extends State<Home> {
   final _toDoController = TextEditingController();
 
   List _toDoList = [];
+
+  Map<String, dynamic> _lastRamove;
+  int _lastRemovePos;
 
   @override
   void initState() {
@@ -86,7 +90,7 @@ class _HomeState extends State<Home> {
 
   Widget buildItem(context, index) {
     return Dismissible(
-      key: Key(DateTime.now().millisecondsSinceEpoch.toString()) ,
+      key: Key(DateTime.now().millisecondsSinceEpoch.toString()),
       background: Container(
         color: Colors.red,
         child: Align(
@@ -111,6 +115,31 @@ class _HomeState extends State<Home> {
           });
         },
       ),
+      onDismissed: (direction) {
+        setState(() {
+          _lastRamove = Map.from(_toDoList[index]);
+          _lastRemovePos = index;
+          _toDoList.removeAt(index);
+
+          _saveData();
+
+          final snack = SnackBar(
+            content: Text("Tarefa \"${_lastRamove["title"]}\" removida!"),
+            action: SnackBarAction(label: "Desfazer", 
+              onPressed: (){
+                setState(() {
+                  _toDoList.insert(_lastRemovePos, _lastRamove);
+                _saveData();
+                });
+                
+              }),
+              duration: Duration(seconds: 2),
+          );
+
+          Scaffold.of(context).showSnackBar(snack);
+
+        });
+      },
     );
   }
 
